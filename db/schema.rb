@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_03_01_063544) do
+ActiveRecord::Schema[7.0].define(version: 2022_03_08_034843) do
   create_table "books", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "produce"
     t.string "binding"
@@ -31,4 +31,23 @@ ActiveRecord::Schema[7.0].define(version: 2022_03_01_063544) do
     t.index ["isbn"], name: "index_books_on_isbn"
   end
 
+  create_table "user_books", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "book_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_id"], name: "index_user_books_on_book_id"
+    t.index ["user_id"], name: "index_user_books_on_user_id"
+  end
+
+  create_table "users", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "openid", null: false
+    t.string "nick_name"
+    t.text "avatar_url"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  add_foreign_key "user_books", "books"
+  add_foreign_key "user_books", "users"
 end

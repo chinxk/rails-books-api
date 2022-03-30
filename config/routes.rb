@@ -8,7 +8,11 @@ Rails.application.routes.draw do
     namespace :v1 do
       resources :books do
         get :by_isbn, on: :collection
-        get :token, on: :collection
+        get :init, on: :collection
+      end
+
+      resources :users do
+        post :storage, on: :collection
       end
     end
   end

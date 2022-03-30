@@ -5,12 +5,26 @@ require 'rest-client'
 module Api
   module V1
     class BooksController < ApplicationController
-      before_action :authenticate!, except: :token
+      before_action :authenticate!, except: :init
 
-      def token
-        render json: {
-          token: Token.encode(aaaa: 'aaaa')
-        }
+      def init
+        # if no openid, try to get it via code
+        openid = params[:openid] || get_open_id
+        if openid.nil?
+          render json: { status: 'error', error: 'no openid!' }
+        else
+          # get/create user via openid
+          user = User.find_by(openid: openid)
+          if user.nil?
+            user = User.new(openid: openid)
+            user.save
+          end
+          token = Token.encode(user: user)
+          render json: { status: 'ok', error: '', user: user,
+                          token: token, my_books: user&.books}
+        end
+
+      
       end
 
       def index
@@ -81,6 +95,29 @@ module Api
           :gist, :edition, :title, :price, :isbn, :pubdate,
           :img, :format, :publisher
         )
+      end
+
+      def get_open_id
+        code = params[:code]
+        options = {
+          method: :get,
+          url: ENV['WX_J2A_API_PATH'],
+          headers: {
+            params: {
+              appid: ENV['WX_APPID'],
+              secret: ENV['WX_SECRET'],
+              js_code: code,
+              grant_type: ENV['WX_GRANT_TYPE']
+            }
+          }
+        }
+        begin
+          res = JSON.parse(RestClient::Request.execute(options))
+          openid = res['openid']
+        rescue StandardError => e
+          Rails.logger.error('StandardError')
+          Rails.logger.error(e)
+        end
       end
     end
   end
