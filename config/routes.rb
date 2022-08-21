@@ -12,7 +12,10 @@ Rails.application.routes.draw do
       end
 
       resources :users do
-        post :storage, on: :collection
+        post :stock, on: :collection
+        post :remove, on: :collection
+        post :read, on: :collection
+        post :unread, on: :collection
       end
     end
   end
