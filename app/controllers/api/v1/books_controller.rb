@@ -20,8 +20,12 @@ module Api
             user.save
           end
           token = Token.encode(user: user)
+          my_books = []
+          user&.user_books.each do |ub|
+            my_books.push({book:ub.book, read_date:ub.read_date, readed: ub.read_date?})
+          end
           render json: { status: 'ok', error: '', user: user,
-                          token: token, my_books: user&.books}
+                          token: token, my_books: my_books}
         end
 
       
@@ -64,7 +68,7 @@ module Api
             if res['code'] == '10000' && (res['result']['showapi_res_body']['ret_code']).zero?
               Rails.logger.debug("-----found book from remote, isbn: #{isbn}, try to save it.")
               new_book = res['result']['showapi_res_body']['data']
-              render json: { data: new_book, status: 'ok', error: nil } if Book.new(new_book).save
+              render json: { book: new_book, status: 'ok', error: nil } if Book.new(new_book).save
             else
               Rails.logger.error("-----get error from remote, isbn: #{isbn}")
               # TODO: handle error from remote

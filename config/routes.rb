@@ -12,6 +12,7 @@ Rails.application.routes.draw do
       end
 
       resources :users do
+        post :avatar, on: :collection
         post :stock, on: :collection
         post :remove, on: :collection
         post :read, on: :collection

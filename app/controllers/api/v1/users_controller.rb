@@ -7,6 +7,22 @@ module Api
 
       before_action :authenticate!
 
+      def avatar
+        Rails.logger.debug(params)
+        openid = params[:openid]
+        user = User.find_by(openid: openid)
+        if user.present?
+          if user.update(user_params)
+            json = {status: 0, message: "update user #{user.nick_name} successfully"}
+          else
+            json = {status: -1, message: "update user #{user.nick_name} failed"}
+          end
+        else
+          json = { status: -1, message: 'user not found'}
+        end
+        render json: json
+      end
+
       def stock
         openid = params[:openid]
         user = User.find_by(openid: openid)
@@ -34,7 +50,7 @@ module Api
         Rails.logger.debug(user.id)
         if user.present?
           i = 0
-          params[:book_ids]&.split(',')&.each do |book_id|
+          params[:book_ids]&.each do |book_id|
             i+=1
             ub = UserBook.find_by(user_id:user.id, book_id: book_id)
             unless ub.nil? || ub.destroy
@@ -54,7 +70,7 @@ module Api
         user = User.find_by(openid: openid)
         if user.present?
           i = 0
-          params[:book_ids]&.split(',')&.each do |book_id|
+          params[:book_ids]&.each do |book_id|
             i+=1
             ub = UserBook.find_by(user_id:user.id, book_id: book_id)
             unless ub.nil? || ub.update_column(:read_date, Date.today)
@@ -74,7 +90,7 @@ module Api
         user = User.find_by(openid: openid)
         if user.present?
           i = 0
-          params[:book_ids]&.split(',')&.each do |book_id|
+          params[:book_ids]&.each do |book_id|
             i+=1
             ub = UserBook.find_by(user_id:user.id, book_id: book_id)
             unless ub.nil? || ub.update_column(:read_date, nil)
@@ -87,6 +103,14 @@ module Api
           json = { status: -1, message: 'user not found'}
         end
         render json: json
+      end
+
+      private
+      
+      def user_params
+        params.require(:user).permit(
+          :nick_name, :avatar_url
+        )
       end
     end
   end
