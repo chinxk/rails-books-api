@@ -14,21 +14,19 @@ module Api
           render json: { status: 'error', error: 'no openid!' }
         else
           # get/create user via openid
-          user = User.find_by(openid: openid)
+          user = User.find_by(openid:)
           if user.nil?
-            user = User.new(openid: openid)
+            user = User.new(openid:)
             user.save
           end
-          token = Token.encode(user: user)
+          token = Token.encode(user:)
           my_books = []
-          user&.user_books.each do |ub|
-            my_books.push({book:ub.book, read_date:ub.read_date, readed: ub.read_date?})
+          user&.user_books&.each do |ub|
+            my_books.push({ book: ub.book, read_date: ub.read_date, readed: ub.read_date? })
           end
-          render json: { status: 'ok', error: '', user: user,
-                          token: token, my_books: my_books}
+          render json: { status: 'ok', error: '', user:,
+                         token:, my_books: }
         end
-
-      
       end
 
       def index
@@ -60,7 +58,6 @@ module Api
           Rails.logger.debug("-----fetch book from remote, isbn: #{isbn}")
           options = {
             method: :get,
-            # url: "https://way.jd.com/showapi/isbn?isbn=#{isbn}&appkey=#{appkey}"
             url: ENV['JD_ISBN_API_PATH'].gsub('{isbn}', isbn)
           }
           begin
@@ -68,7 +65,8 @@ module Api
             if res['code'] == '10000' && (res['result']['showapi_res_body']['ret_code']).zero?
               Rails.logger.debug("-----found book from remote, isbn: #{isbn}, try to save it.")
               new_book = res['result']['showapi_res_body']['data']
-              render json: { book: new_book, status: 'ok', error: nil } if Book.new(new_book).save
+              new_book = Book.new(new_book)
+              render json: { book: new_book, status: 'ok', error: nil } if new_book.save
             else
               Rails.logger.error("-----get error from remote, isbn: #{isbn}")
               # TODO: handle error from remote
@@ -102,6 +100,8 @@ module Api
       end
 
       def get_open_id
+        return unless params[:code]
+
         code = params[:code]
         options = {
           method: :get,
